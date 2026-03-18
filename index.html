@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AssamStudentHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit}
+
+/* ── THEMES ─────────────────────────────────────────────── */
+:root{
+  --ff:'DM Sans',sans-serif;
+  --ffd:'Playfair Display',serif;
+  --tr:0.2s ease;
+  --num-font:'DM Sans',sans-serif;
+}
+
+[data-theme="light"]{
+  --bg:#f5f2ed;
+  --bg2:#ece8e0;
+  --surface:#ffffff;
+  --surface2:#f0ece5;
+  --border:#e0dbd2;
+  --border2:#c5c0b8;
+  --text:#111110;
+  --text2:#52504a;
+  --text3:#a09c95;
+  --text4:#d0cdc8;
+  --accent:#111110;
+  --accent-bg:rgba(17,17,16,0.06);
+  --accent-bdr:rgba(17,17,16,0.15);
+  --dot:rgba(0,0,0,0.07);
+  --sh:0 1px 3px rgba(0,0,0,0.05),0 4px 12px rgba(0,0,0,0.04);
+  --sh2:0 2px 8px rgba(0,0,0,0.08),0 16px 40px rgba(0,0,0,0.06);
+  --sh3:0 0 0 3px rgba(17,17,16,0.08);
+  --topbar-bg:#f5f2ed;
+  --topbar-bdr:rgba(0,0,0,0.08);
+}
+[data-theme="dark"]{
+  --bg:#0e0f0d;
+  --bg2:#161714;
+  --surface:#1a1c18;
+  --surface2:#22251f;
+  --border:#2a2d26;
+  --border2:#3a3e36;
+  --text:#e8e6e0;
+  --text2:#888680;
+  --text3:#484644;
+  --text4:#303030;
+  --accent:#e8e6e0;
+  --accent-bg:rgba(232,230,224,0.07);
+  --accent-bdr:rgba(232,230,224,0.15);
+  --dot:rgba(255,255,255,0.04);
+  --sh:0 1px 3px rgba(0,0,0,0.3),0 4px 12px rgba(0,0,0,0.2);
+  --sh2:0 2px 8px rgba(0,0,0,0.4),0 16px 40px rgba(0,0,0,0.3);
+  --sh3:0 0 0 3px rgba(232,230,224,0.08);
+  --topbar-bg:#0e0f0d;
+  --topbar-bdr:rgba(255,255,255,0.07);
+}
+
+/* ── BASE ───────────────────────────────────────────────── */
+body{font-family:var(--ff);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 100% 32% at 50% 0%,var(--bg),transparent),radial-gradient(ellipse 100% 32% at 50% 100%,var(--bg),transparent)}
+#root{position:relative;z-index:2}
+
+/* ── REVEAL ANIMATIONS ──────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:none}
+.reveal-group>*{opacity:0;transform:translateY(18px);transition:opacity .4s ease,transform .4s ease}
+.reveal-group.visible>*{opacity:1;transform:none}
+.reveal-group.visible>*:nth-child(1){transition-delay:0s}
+.reveal-group.visible>*:nth-child(2){transition-delay:.06s}
+.reveal-group.visible>*:nth-child(3){transition-delay:.12s}
+.reveal-group.visible>*:nth-child(4){transition-delay:.18s}
+.reveal-group.visible>*:nth-child(5){transition-delay:.24s}
+.reveal-group.visible>*:nth-child(6){transition-delay:.30s}
+.reveal-group.visible>*:nth-child(7){transition-delay:.36s}
+.reveal-group.visible>*:nth-child(n+8){transition-delay:.40s}
+
+/* ── STICKY HEADER ──────────────────────────────────────── */
+#site-header{
+  position:sticky;top:0;z-index:200;
+  background:var(--topbar-bg);
+  transition:box-shadow .3s,border-color .3s;
+}
+#site-header.stuck{
+  box-shadow:0 1px 0 var(--topbar-bdr),var(--sh);
+}
+
+/* Top row — logo + search + modes. Always visible. */
+.hdr-top{
+  display:flex;align-items:center;gap:12px;
+  padding:0 24px;height:56px;
+  border-bottom:1px solid transparent;
+  transition:border-color .3s,height .3s;
+}
+#site-header.stuck .hdr-top{
+  border-bottom-color:var(--topbar-bdr);
+}
+
+.logo{
+  font-family:var(--ffd);
+  font-size:1.25rem;font-weight:700;
+  color:var(--text);letter-spacing:-.02em;
+  white-space:nowrap;flex-shrink:0;
+}
+.logo em{font-style:italic;color:var(--text2)}
+
+/* Search — expands in header when scrolled */
+.hdr-search-wrap{
+  flex:1;max-width:0;overflow:hidden;
+  opacity:0;
+  transition:max-width .35s ease,opacity .3s ease,margin .3s;
+}
+#site-header.stuck .hdr-search-wrap{
+  max-width:480px;opacity:1;margin:0 4px;
+}
+.hdr-search-wrap input{
+  width:100%;background:var(--surface2);color:var(--text);
+  border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px 7px 34px;font-size:.84rem;font-weight:400;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.hdr-search-wrap input::placeholder{color:var(--text3)}
+.hdr-search-wrap input:focus{border-color:var(--border2);box-shadow:var(--sh3)}
+.hdr-search-icon{position:relative;flex:1}
+.hdr-search-icon svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text3);pointer-events:none}
+
+.hdr-right{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto}
+
+/* Mode toggle */
+.mode-toggle{display:flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--border);border-radius:9px}
+.m-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);transition:var(--tr)}
+.m-btn:hover{color:var(--text)}
+.m-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+
+/* Nav tabs row — hidden until scrolled */
+.hdr-tabs{
+  display:flex;align-items:center;gap:4px;
+  padding:0 24px;height:0;overflow:hidden;
+  opacity:0;
+  border-bottom:1px solid transparent;
+  transition:height .35s ease,opacity .3s ease,border-color .3s;
+}
+#site-header.stuck .hdr-tabs{
+  height:42px;opacity:1;
+  border-bottom-color:var(--topbar-bdr);
+}
+.h-tab{padding:6px 16px;border-radius:7px;font-size:.78rem;font-weight:600;letter-spacing:.03em;color:var(--text3);border:1px solid transparent;transition:var(--tr);white-space:nowrap}
+.h-tab:hover{color:var(--text);background:var(--surface2)}
+.h-tab.active{color:var(--text);background:var(--accent-bg);border-color:var(--accent-bdr)}
+
+/* ── HERO ───────────────────────────────────────────────── */
+.hero{text-align:center;padding:56px 24px 48px;position:relative;overflow:hidden}
+.hero-ambient{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 70% at 50% 0%,var(--accent-bg),transparent)}
+
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);padding:5px 14px;border:1px solid var(--border);border-radius:999px;background:var(--surface);margin-bottom:20px;animation:fadeUp .6s ease both}
+
+.hero-title{
+  font-family:var(--ffd);
+  font-size:clamp(2.4rem,5.5vw,4rem);
+  font-weight:700;line-height:1.06;
+  letter-spacing:-.025em;
+  color:var(--text);
+  margin-bottom:14px;
+  animation:fadeUp .6s .08s ease both;
+}
+.hero-title em{font-style:italic;color:var(--text2)}
+
+.hero-sub{font-size:.92rem;font-weight:400;color:var(--text2);max-width:420px;margin:0 auto 32px;line-height:1.7;animation:fadeUp .6s .15s ease both}
+
+/* Hero stats */
+.hero-stats{
+  display:flex;justify-content:center;gap:0;
+  margin-bottom:36px;
+  animation:fadeUp .6s .2s ease both;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:18px 0;
+  max-width:480px;
+  margin-left:auto;margin-right:auto;
+  box-shadow:var(--sh);
+}
+.hstat{
+  flex:1;text-align:center;
+  border-right:1px solid var(--border);
+  padding:0 16px;
+}
+.hstat:last-child{border-right:none}
+.hstat{text-align:center}
+.hstat-num{
+  font-family:var(--ff);
+  font-size:2.2rem;font-weight:700;
+  color:var(--text);
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+  letter-spacing:-.03em;
+}
+.hstat-lbl{font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-top:6px}
+
+/* Hero search */
+.hero-search-wrap{
+  max-width:560px;margin:0 auto 32px;
+  position:relative;
+  animation:fadeUp .6s .22s ease both;
+}
+.hero-search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text3);pointer-events:none}
+.hero-search{
+  width:100%;background:var(--surface);color:var(--text);
+  border:1.5px solid var(--border);border-radius:14px;
+  padding:13px 16px 13px 46px;
+  font-size:.92rem;font-weight:400;
+  outline:none;box-shadow:var(--sh);
+  transition:border-color .2s,box-shadow .2s;
+}
+.hero-search::placeholder{color:var(--text3)}
+.hero-search:focus{border-color:var(--border2);box-shadow:var(--sh2)}
+
+/* Hero section tabs */
+.hero-tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;animation:fadeUp .6s .28s ease both}
+.hero-tab{
+  padding:10px 24px;border-radius:10px;
+  font-size:.8rem;font-weight:600;letter-spacing:.03em;
+  color:var(--text2);
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  transition:var(--tr);white-space:nowrap;
+  box-shadow:var(--sh);
+}
+.hero-tab:hover{color:var(--text);border-color:var(--border2)}
+.hero-tab.active{
+  color:var(--surface);
+  background:var(--text);
+  border-color:var(--text);
+}
+[data-theme="dark"] .hero-tab.active{color:var(--bg)}
+
+/* ── PAGES ──────────────────────────────────────────────── */
+.page{display:none}.page.active{display:block}
+.container{max-width:860px;margin:0 auto;padding:0 22px 90px}
+
+/* Section header */
+.sec-hdr{display:flex;align-items:baseline;gap:10px;padding-bottom:14px;margin-bottom:22px;border-bottom:1.5px solid var(--border)}
+.sec-hdr h2{font-family:var(--ffd);font-size:1.55rem;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.sec-hdr h2 em{font-style:italic;color:var(--text2)}
+.sec-count{
+  margin-left:auto;
+  font-family:var(--ff);
+  font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:4px 12px;border-radius:999px;
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.f-sel{
+  background:var(--surface);color:var(--text);
+  border:1.5px solid var(--border);border-radius:9px;
+  padding:8px 12px;font-size:.8rem;font-weight:500;
+  outline:none;cursor:pointer;transition:border-color .2s;
+  box-shadow:var(--sh);
+}
+.f-sel:focus{border-color:var(--border2)}
+.f-sel option{background:var(--bg2)}
+
+/* ── ROW ITEM ───────────────────────────────────────────── */
+.list{display:flex;flex-direction:column;gap:6px}
+
+.row{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color .2s,box-shadow .2s,transform .2s;
+  box-shadow:var(--sh);
+}
+.row:hover{border-color:var(--border2);box-shadow:var(--sh2);transform:translateY(-1px)}
+
+.row-top{display:grid;grid-template-columns:40px 1fr auto;gap:14px;align-items:center;padding:14px 16px}
+
+/* Black/mono icon */
+.row-icon{
+  width:40px;height:40px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  color:var(--text2);
+}
+.row-icon svg{width:18px;height:18px}
+
+.row-body{min-width:0}
+.row-title{
+  font-size:.93rem;font-weight:600;color:var(--text);
+  line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:5px;
+}
+.row-meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:.75rem;font-weight:500;color:var(--text2)}
+.row-meta span{display:flex;align-items:center;gap:4px}
+.row-meta svg{width:11px;height:11px;color:var(--text3);flex-shrink:0}
+
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+
+/* TYPE BADGE */
+.badge{
+  font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;border:1px solid var(--border);
+  color:var(--text2);background:var(--surface2);white-space:nowrap;
+}
+
+/* VALUE — salary / amount */
+.row-val{
+  font-family:var(--ff);
+  font-size:.82rem;font-weight:700;color:var(--text);
+  text-align:right;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+  letter-spacing:-.02em;
+  line-height:1.25;
+  max-width:130px;
+  word-break:break-word;
+  white-space:normal;
+}
+
+/* DETAIL PANEL */
+.row-det{
+  max-height:0;overflow:hidden;
+  border-top:0px solid var(--border);
+  transition:max-height .38s ease,padding .3s ease;
+  padding:0 16px;
+}
+@media(hover:hover){
+  .row:hover .row-det{max-height:400px;border-top-width:1px;padding:14px 16px 16px}
+}
+.row.open .row-det{max-height:400px;border-top:1px solid var(--border);padding:14px 16px 16px}
+
+.det-txt{font-size:.82rem;font-weight:400;color:var(--text2);line-height:1.75;margin-bottom:12px}
+.det-pts{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+.det-pts li{font-size:.79rem;font-weight:500;color:var(--text2);display:flex;align-items:flex-start;gap:8px;line-height:1.55}
+.det-pts li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--text2);flex-shrink:0;margin-top:7px}
+
+.det-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:11px;border-top:1px solid var(--border)}
+.dl{font-size:.78rem;font-weight:500;color:var(--text2);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.dl strong{font-weight:700;color:var(--text)}
+.dl.urg strong{color:#c03030}
+[data-theme="dark"] .dl.urg strong{color:#e06060}
+
+.view-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 16px;border-radius:8px;
+  background:var(--text);color:var(--surface);
+  font-size:.74rem;font-weight:700;letter-spacing:.03em;
+  transition:var(--tr);white-space:nowrap;
+}
+.view-btn:hover{opacity:.82}
+[data-theme="dark"] .view-btn{background:var(--text);color:var(--bg)}
+
+/* ── ICONS (inline SVG sets) ────────────────────────────── */
+/* We define icon SVG paths per type */
+
+/* ── UNI GRID ───────────────────────────────────────────── */
+.uni-section-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.uni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:24px}
+.uni-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:12px;padding:14px 12px;
+  cursor:pointer;transition:var(--tr);
+  box-shadow:var(--sh);position:relative;overflow:hidden;
+}
+.uni-card:hover{border-color:var(--border2);box-shadow:var(--sh2);transform:translateY(-1px)}
+.uni-card.active{border-color:var(--text);background:var(--accent-bg)}
+.uni-card.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--text)}
+.uc-icon{width:28px;height:28px;color:var(--text2);margin-bottom:8px}
+.uc-icon svg{width:28px;height:28px}
+.uc-name{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.3}
+.uc-sub{font-size:.65rem;font-weight:400;color:var(--text3);line-height:1.4}
+
+/* ── SS SUBTABS ─────────────────────────────────────────── */
+.ss-tabs{display:flex;gap:6px;margin-bottom:20px}
+.ss-tab{padding:8px 20px;border-radius:9px;font-size:.78rem;font-weight:600;color:var(--text2);border:1.5px solid var(--border);background:var(--surface);transition:var(--tr);box-shadow:var(--sh)}
+.ss-tab:hover{color:var(--text);border-color:var(--border2)}
+.ss-tab.active{color:var(--text);background:var(--accent-bg);border-color:var(--accent-bdr)}
+
+/* ── EMPTY ──────────────────────────────────────────────── */
+.empty{text-align:center;padding:3.5rem 1rem;color:var(--text3);font-size:.88rem;font-weight:500}
+.empty .ico{font-size:1.8rem;margin-bottom:8px;filter:grayscale(1);opacity:.4}
+
+/* ── CONTACT FOOTER ─────────────────────────────────────── */
+.contact-footer{border-top:1.5px solid var(--border);padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.cf-brand{font-family:var(--ffd);font-size:1.3rem;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.cf-brand em{font-style:italic;color:var(--text2)}
+.cf-link{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;font-weight:600;color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:10px 20px;background:var(--surface);transition:var(--tr);box-shadow:var(--sh)}
+.cf-link:hover{background:var(--text);color:var(--surface)}
+[data-theme="dark"] .cf-link:hover{color:var(--bg)}
+.cf-sources{font-size:.7rem;color:var(--text3);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 12px}
+.cf-sources a{color:var(--text2)}.cf-sources a:hover{color:var(--text)}
+.cf-copy{font-size:.68rem;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+
+/* ── MOBILE ─────────────────────────────────────────────── */
+@media(max-width:620px){
+  .hdr-top{padding:0 14px;height:52px}
+  .hero{padding:40px 16px 36px}
+  .hero-stats{gap:24px}
+  .hstat-num{font-size:1.6rem}
+  .hero-tab{padding:9px 18px;font-size:.76rem}
+  .container{padding:0 14px 60px}
+  .row-top{grid-template-columns:36px 1fr;gap:10px}
+  .row-right{display:none}
+  .row-title{white-space:normal;font-size:.86rem}
+  .uni-grid{grid-template-columns:repeat(2,1fr)}
+  .hdr-tabs{padding:0 14px}
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- ══ STICKY HEADER ════════════════════════════════════ -->
+<header id="site-header">
+  <div class="hdr-top">
+    <div class="logo">Assam<em>StudentHub</em></div>
+
+    <!-- Search — slides in when scrolled -->
+    <div class="hdr-search-wrap">
+      <div class="hdr-search-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="hdr-search" type="text" placeholder="Search…" oninput="syncSearch(this.value)">
+      </div>
+    </div>
+
+    <div class="hdr-right">
+      <div class="mode-toggle">
+        <button class="m-btn active" data-t="light" title="Light">☀️</button>
+        <button class="m-btn" data-t="dark" title="Dark">🌙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs row — slides down on scroll -->
+  <div class="hdr-tabs" id="hdr-tabs">
+    <button class="h-tab active" data-page="employment">💼 Employment</button>
+    <button class="h-tab" data-page="student">🎓 Student Alerts</button>
+    <button class="h-tab" data-page="exams">📝 Exams</button>
+    <button class="h-tab" data-page="scholarships">🏅 Scholarships &amp; Schemes</button>
+  </div>
+</header>
+
+<!-- ══ HERO ══════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-ambient"></div>
+
+  <div class="hero-eyebrow">
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+    Official Sources · Assam
+  </div>
+
+  <h1 class="hero-title">
+    Your gateway to<br><em>opportunities in Assam</em>
+  </h1>
+
+  <p class="hero-sub">Jobs, university alerts, exams, scholarships &amp; government schemes — from official sources only.</p>
+
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-num" id="stat-jobs">—</div><div class="hstat-lbl">Jobs</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-notif">—</div><div class="hstat-lbl">Notices</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-exams">—</div><div class="hstat-lbl">Exams</div></div>
+    <div class="hstat"><div class="hstat-num" id="stat-sch">12+</div><div class="hstat-lbl">Scholarships</div></div>
+  </div>
+
+  <!-- Hero search -->
+  <div class="hero-search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="hero-search" id="hero-search" placeholder="Search jobs, notices, scholarships, schemes…" oninput="syncSearch(this.value)">
+  </div>
+
+  <div class="hero-tabs">
+    <button class="hero-tab active" data-page="employment">💼 Employment Assam</button>
+    <button class="hero-tab" data-page="student">🎓 Student Assam</button>
+    <button class="hero-tab" data-page="exams">📝 Exams</button>
+    <button class="hero-tab" data-page="scholarships">🏅 Scholarships &amp; Schemes</button>
+  </div>
+</section>
+
+<main>
+
+<!-- EMPLOYMENT -->
+<div id="page-employment" class="page active">
+  <div class="container">
+    <div class="sec-hdr reveal"><h2>Employment <em>Assam</em></h2><span class="sec-count" id="job-count">—</span></div>
+    <div class="filter-bar reveal">
+      <select class="f-sel" id="job-type" onchange="renderJobs()">
+        <option value="">All Types</option>
+        <option value="govt">Government</option>
+        <option value="academic">Academic</option>
+        <option value="private">Private / PSU</option>
+      </select>
+      <select class="f-sel" id="job-src" onchange="renderJobs()">
+        <option value="">All Sources</option>
+      </select>
+    </div>
+    <div id="job-list" class="list reveal-group"><div class="empty"><div class="ico">📋</div>Loading jobs…</div></div>
+    <div id="no-jobs" class="empty" style="display:none"><div class="ico">🔍</div>No jobs match your search.</div>
+  </div>
+</div>
+
+<!-- STUDENT ALERTS -->
+<div id="page-student" class="page">
+  <div class="container">
+    <div class="sec-hdr reveal"><h2>Student <em>Assam</em></h2><span class="sec-count" id="notif-count">—</span></div>
+
+    <div class="uni-section-label reveal">Assam Institutions</div>
+    <div class="uni-grid reveal-group" id="uni-grid-assam">
+      <div class="uni-card active" data-uni=""><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="uc-name">All Institutions</div><div class="uc-sub">Show all notices</div></div>
+      <div class="uni-card" data-uni="gauhati"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M9 21V10m6 11V10M3 10l9-7 9 7"/></svg></div><div class="uc-name">Gauhati University</div><div class="uc-sub">State Univ · Guwahati</div></div>
+      <div class="uni-card" data-uni="tezpur"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><div class="uc-name">Tezpur University</div><div class="uc-sub">Central Univ · Tezpur</div></div>
+      <div class="uni-card" data-uni="bodoland"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="uc-name">Bodoland University</div><div class="uc-sub">State Univ · Kokrajhar</div></div>
+      <div class="uni-card" data-uni="dibrugarh"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><div class="uc-name">Dibrugarh University</div><div class="uc-sub">State Univ · Dibrugarh</div></div>
+      <div class="uni-card" data-uni="cotton"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="uc-name">Cotton University</div><div class="uc-sub">State Univ · Guwahati</div></div>
+      <div class="uni-card" data-uni="mangaldai"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 20h20M4 20V8l8-6 8 6v12M10 20v-5h4v5"/></svg></div><div class="uc-name">Mangaldai College</div><div class="uc-sub">Govt College · Mangaldai</div></div>
+      <div class="uni-card" data-uni="gmc"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="uc-name">Gauhati Medical College</div><div class="uc-sub">Medical · Guwahati</div></div>
+    </div>
+
+    <div class="uni-section-label reveal" style="margin-top:6px">National Institutions</div>
+    <div class="uni-grid reveal-group">
+      <div class="uni-card" data-uni="iitg"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div><div class="uc-name">IIT Guwahati</div><div class="uc-sub">IIT · Guwahati</div></div>
+      <div class="uni-card" data-uni="nit"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div class="uc-name">NIT Silchar</div><div class="uc-sub">NIT · Silchar</div></div>
+      <div class="uni-card" data-uni="iimk"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="uc-name">IIM Kashipur</div><div class="uc-sub">IIM · North East</div></div>
+      <div class="uni-card" data-uni="aiims"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="uc-name">AIIMS Guwahati</div><div class="uc-sub">AIIMS · Guwahati</div></div>
+      <div class="uni-card" data-uni="nerist"><div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="uc-name">NERIST</div><div class="uc-sub">Tech Inst · Nirjuli</div></div>
+    </div>
+
+    <div class="filter-bar reveal">
+      <select class="f-sel" id="notif-cat" onchange="renderNotif()">
+        <option value="">All Categories</option>
+        <option value="admission">Admissions</option>
+        <option value="exam">Exam / Results</option>
+        <option value="recruitment">Recruitment</option>
+        <option value="circular">Circulars</option>
+      </select>
+    </div>
+    <div id="notif-list" class="list reveal-group"><div class="empty"><div class="ico">📋</div>Loading notifications…</div></div>
+    <div id="no-notif" class="empty" style="display:none"><div class="ico">🔍</div>No notifications match.</div>
+  </div>
+</div>
+
+<!-- EXAMS -->
+<div id="page-exams" class="page">
+  <div class="container">
+    <div class="sec-hdr reveal"><h2>Exams <em>Assam</em></h2><span class="sec-count" id="exam-count">—</span></div>
+    <div class="filter-bar reveal">
+      <select class="f-sel" id="exam-cat" onchange="renderExams()">
+        <option value="">All Categories</option>
+        <option value="board">Board Exams</option>
+        <option value="university">University Exams</option>
+        <option value="competitive">Competitive</option>
+        <option value="entrance">Entrance Exams</option>
+      </select>
+    </div>
+    <div id="exam-list" class="list reveal-group"></div>
+    <div id="no-exams" class="empty" style="display:none"><div class="ico">🔍</div>No exams match.</div>
+  </div>
+</div>
+
+<!-- SCHOLARSHIPS & SCHEMES -->
+<div id="page-scholarships" class="page">
+  <div class="container">
+    <div class="sec-hdr reveal"><h2>Scholarships <em>&amp; Schemes</em></h2><span class="sec-count" id="ss-count">—</span></div>
+    <div class="ss-tabs reveal">
+      <button class="ss-tab active" data-ss="scholarships">🏅 Scholarships</button>
+      <button class="ss-tab" data-ss="schemes">🌱 Govt Schemes</button>
+    </div>
+    <div class="filter-bar" id="sch-filters">
+      <select class="f-sel" id="sch-cat" onchange="renderSS()">
+        <option value="">All Categories</option>
+        <option value="merit">Merit-based</option>
+        <option value="sc_st">SC / ST / OBC</option>
+        <option value="minority">Minority</option>
+        <option value="technical">Technical</option>
+        <option value="central">Central Govt</option>
+      </select>
+    </div>
+    <div class="filter-bar" id="scheme-filters" style="display:none">
+      <select class="f-sel" id="scheme-cat" onchange="renderSS()">
+        <option value="">All Categories</option>
+        <option value="education">Education</option>
+        <option value="livelihood">Livelihood</option>
+        <option value="welfare">Welfare</option>
+        <option value="health">Health</option>
+      </select>
+    </div>
+    <div id="ss-list" class="list reveal-group"></div>
+    <div id="no-ss" class="empty" style="display:none"><div class="ico">🔍</div>No results match.</div>
+  </div>
+</div>
+
+</main>
+
+<!-- CONTACT -->
+<div class="contact-footer reveal">
+  <div class="cf-brand">Assam<em>StudentHub</em></div>
+  <a class="cf-link" href="mailto:businessforahul@gmail.com">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+    businessforahul@gmail.com
+  </a>
+  <div class="cf-sources">
+    <a href="https://apsc.nic.in" target="_blank">APSC</a>
+    <a href="https://slprbassam.in" target="_blank">SLPRB</a>
+    <a href="https://www.aesrb.in" target="_blank">AESRB</a>
+    <a href="https://nhm.assam.gov.in" target="_blank">NHM Assam</a>
+    <a href="https://assamcareer.com" target="_blank">AssamCareer</a>
+    <a href="https://www.dailyassamjob.in" target="_blank">DailyAssamJob</a>
+    <a href="https://gauhati.ac.in" target="_blank">Gauhati Univ</a>
+    <a href="http://www.tezu.ac.in" target="_blank">Tezpur Univ</a>
+    <a href="https://mangaldaicollege.org" target="_blank">Mangaldai College</a>
+  </div>
+  <div class="cf-copy">© 2025 AssamStudentHub · Data from official portals</div>
+</div>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────
+let JOBS=[], NOTIFS=[], EXAMS_LIVE=[], activeRow=null, activeUni='', activeSS='scholarships';
+let searchQ = '';
+
+// ── THEME ──────────────────────────────────────────────────
+(()=>applyTheme(localStorage.getItem('ash-theme')||'light'))();
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('ash-theme',t);
+  document.querySelectorAll('.m-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+}
+document.querySelectorAll('.m-btn').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.t)));
+
+// ── SCROLL: sticky header with tabs ───────────────────────
+const hdr = document.getElementById('site-header');
+const HERO_H = () => document.querySelector('.hero').offsetHeight;
+window.addEventListener('scroll',()=>{
+  const stuck = window.scrollY > HERO_H() - 80;
+  hdr.classList.toggle('stuck', stuck);
+},{passive:true});
+
+// ── SEARCH SYNC (hero ↔ header) ────────────────────────────
+function syncSearch(val){
+  searchQ = val.toLowerCase();
+  document.getElementById('hero-search').value = val;
+  document.getElementById('hdr-search').value  = val;
+  const p = document.querySelector('.hero-tab.active')?.dataset.page || 'employment';
+  if(p==='employment') renderJobs();
+  else if(p==='student') renderNotif();
+  else if(p==='exams') renderExams();
+  else renderSS();
+}
+
+// ── PAGE SWITCH ────────────────────────────────────────────
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.hero-tab,.h-tab').forEach(b=>b.classList.toggle('active',b.dataset.page===name));
+  document.getElementById('page-'+name).classList.add('active');
+  searchQ='';
+  document.getElementById('hero-search').value='';
+  document.getElementById('hdr-search').value='';
+  const ph={employment:'Search jobs…',student:'Search university notices…',exams:'Search exams…',scholarships:'Search scholarships & schemes…'};
+  document.getElementById('hero-search').placeholder = ph[name]||'Search…';
+  document.getElementById('hdr-search').placeholder  = ph[name]||'Search…';
+  setTimeout(observeNew,60);
+}
+document.querySelectorAll('.hero-tab,.h-tab').forEach(b=>b.addEventListener('click',()=>switchPage(b.dataset.page)));
+
+// ── REVEAL ─────────────────────────────────────────────────
+function makeObserver(){
+  return new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+  },{threshold:0.07,rootMargin:'0px 0px -30px 0px'});
+}
+const obs = makeObserver();
+function observeNew(){
+  document.querySelectorAll('.reveal:not(.visible),.reveal-group:not(.visible)').forEach(el=>obs.observe(el));
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.reveal,.reveal-group').forEach(el=>obs.observe(el));
+});
+
+// ── HELPERS ────────────────────────────────────────────────
+function dL(d){return d?Math.ceil((new Date(d)-new Date())/86400000):null}
+function fD(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):''}
+function esc(s){return(s||'').replace(/'/g,"&#39;").replace(/"/g,"&quot;")}
+function pSal(s){if(!s)return 0;const n=(s.match(/[\d,]+/g)||[]).map(x=>parseInt(x.replace(/,/g,'')));return n.length?Math.max(...n):0}
+function isExpired(d){return d&&new Date(d)<new Date()}
+
+// SVG icons for row types
+const ICONS = {
+  govt:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M3 10l9-7 9 7M5 10v11M19 10v11M9 10h6M9 21v-5h6v5"/></svg>`,
+  academic:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+  private: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>`,
+  health:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+  police:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  exam:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  scholar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+  scheme:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  notif:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  ncs:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+};
+
+function getJobIcon(j){
+  const t=(j.title||'').toLowerCase();
+  if(t.includes('police')||t.includes('constable')||t.includes('inspector')) return ICONS.police;
+  if(t.includes('health')||t.includes('nurse')||t.includes('doctor')||t.includes('nhm')) return ICONS.health;
+  if(j.type==='academic') return ICONS.academic;
+  if(j.type==='private') return ICONS.private;
+  if(t.includes('ncs')||t.includes('browse')) return ICONS.ncs;
+  return ICONS.govt;
+}
+
+function foot(lastDate,url){
+  const d=dL(lastDate);
+  const cls=d!==null&&d<=7?'urg':'';
+  const txt=!lastDate?'Check official site':d<0?'Expired':d===0?'Today!':d+' days left';
+  return `<div class="det-foot">
+    <div class="dl ${cls}">${lastDate?`Last date: <strong>${fD(lastDate)}</strong> &nbsp;·&nbsp; <strong>${txt}</strong>`:`<strong>${txt}</strong>`}</div>
+    <a class="view-btn" href="${esc(url||'#')}" target="_blank" onclick="event.stopPropagation()">
+      View
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+    </a>
+  </div>`;
+}
+
+function makeRow(iconSVG, title, meta, badge, val, desc, pts, lastDate, url){
+  const li=(pts||[]).map(p=>`<li>${p}</li>`).join('');
+  const mh=(meta||[]).filter(Boolean).map(m=>`<span>${m}</span>`).join('');
+  return `<div class="row" onclick="toggleRow(this,event)">
+    <div class="row-top">
+      <div class="row-icon">${iconSVG}</div>
+      <div class="row-body">
+        <div class="row-title">${title}</div>
+        <div class="row-meta">${mh}</div>
+      </div>
+      <div class="row-right">
+        ${badge?`<span class="badge">${badge}</span>`:''}
+        ${val?`<div class="row-val">${val}</div>`:''}
+      </div>
+    </div>
+    <div class="row-det">
+      ${desc?`<div class="det-txt">${desc}</div>`:''}
+      ${li?`<ul class="det-pts">${li}</ul>`:''}
+      ${foot(lastDate,url)}
+    </div>
+  </div>`;
+}
+
+function toggleRow(row,e){
+  if(window.matchMedia('(hover:hover)').matches&&window.innerWidth>620)return;
+  if(activeRow&&activeRow!==row)activeRow.classList.remove('open');
+  row.classList.toggle('open');
+  activeRow=row.classList.contains('open')?row:null;
+}
+
+// ── META ICONS ─────────────────────────────────────────────
+const locSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+const orgSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>`;
+const vacSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`;
+const calSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+const eduSvg=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+
+// ── EMPLOYMENT ─────────────────────────────────────────────
+function renderJobs(){
+  const type=document.getElementById('job-type').value;
+  const src=document.getElementById('job-src').value;
+  let list=JOBS.filter(j=>{
+    if(isExpired(j.lastDate))return false;
+    const t=((j.title||'')+(j.org||'')+(j.location||'')).toLowerCase();
+    return(!searchQ||t.includes(searchQ))&&(!type||j.type===type)&&(!src||j.source===src);
+  }).sort((a,b)=>pSal(b.salary)-pSal(a.salary));
+
+  const el=document.getElementById('job-list'),no=document.getElementById('no-jobs');
+  document.getElementById('job-count').textContent=list.length+' jobs';
+  document.getElementById('stat-jobs').textContent=JOBS.filter(j=>!isExpired(j.lastDate)).length;
+  if(!list.length){el.innerHTML='';no.style.display='block';return}
+  no.style.display='none';
+  const tl={govt:'Government',academic:'Academic',private:'Private'};
+  el.innerHTML=list.map(j=>makeRow(
+    getJobIcon(j), j.title,
+    [j.org&&`${orgSvg} ${j.org}`, j.location&&`${locSvg} ${j.location}`, j.vacancies&&`${vacSvg} ${j.vacancies} posts`],
+    tl[j.type]||'Government', j.salary,
+    j.description, j.fullDesc, j.lastDate, j.adUrl
+  )).join('');
+  el.classList.add('visible');
+}
+
+async function loadJobs(){
+  try{const r=await fetch('/api/jobs');if(!r.ok)throw 0;const d=await r.json();JOBS=Array.isArray(d)&&d.length?d:FB_JOBS;}
+  catch{JOBS=FB_JOBS;}
+  const sources=[...new Set(JOBS.map(j=>j.source).filter(Boolean))];
+  const sel=document.getElementById('job-src');
+  sel.innerHTML='<option value="">All Sources</option>'+sources.map(s=>`<option value="${esc(s)}">${s}</option>`).join('');
+  renderJobs();
+}
+
+// ── NOTIFICATIONS ──────────────────────────────────────────
+document.querySelectorAll('.uni-card').forEach(c=>{
+  c.addEventListener('click',()=>{
+    activeUni=c.dataset.uni;
+    document.querySelectorAll('.uni-card').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    renderNotif();
+  });
+});
+
+const UL={gauhati:'Gauhati University',tezpur:'Tezpur University',bodoland:'Bodoland University',
+  mangaldai:'Mangaldai College',dibrugarh:'Dibrugarh University',cotton:'Cotton University',
+  gmc:'Gauhati Medical College',iitg:'IIT Guwahati',nit:'NIT Silchar',
+  iimk:'IIM Kashipur',aiims:'AIIMS Guwahati',nerist:'NERIST'};
+const CAT={admission:'Admission',exam:'Exam / Result',recruitment:'Recruitment',circular:'Circular'};
+
+function renderNotif(){
+  const cat=document.getElementById('notif-cat').value;
+  let list=NOTIFS.filter(n=>{
+    const t=(n.title||'').toLowerCase();
+    return(!searchQ||t.includes(searchQ))&&(!activeUni||n.uni===activeUni)&&(!cat||n.cat===cat);
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const el=document.getElementById('notif-list'),no=document.getElementById('no-notif');
+  document.getElementById('notif-count').textContent=list.length+' notices';
+  document.getElementById('stat-notif').textContent=NOTIFS.length;
+  if(!list.length){el.innerHTML='';no.style.display='block';return}
+  no.style.display='none';
+  el.innerHTML=list.map(n=>makeRow(
+    ICONS.notif, n.title,
+    [`${orgSvg} ${UL[n.uni]||n.uni}`, fD(n.date)],
+    CAT[n.cat]||'Notice', null,
+    n.description, n.details, n.deadline, n.url
+  )).join('');
+  el.classList.add('visible');
+}
+
+async function loadNotifs(){
+  try{const r=await fetch('/api/notifications');if(!r.ok)throw 0;const d=await r.json();NOTIFS=Array.isArray(d)&&d.length?d:FB_NOTIFS;}
+  catch{NOTIFS=FB_NOTIFS;}
+  NOTIFS=[...NOTIFS,...NATIONAL_NOTIFS];
+  renderNotif();
+}
+
+// ── EXAMS ──────────────────────────────────────────────────
+function renderExams(){
+  const cat=document.getElementById('exam-cat').value;
+  let list=[...EXAMS_LIVE,...EXAMS_HARDCODED].filter(e=>{
+    const t=(e.title+e.org+(e.streams||'')).toLowerCase();
+    const notExpired=!e.examDate||new Date(e.examDate)>=new Date();
+    return notExpired&&(!searchQ||t.includes(searchQ))&&(!cat||e.cat===cat);
+  }).sort((a,b)=>new Date(a.examDate||'2099')-new Date(b.examDate||'2099'));
+
+  const el=document.getElementById('exam-list'),no=document.getElementById('no-exams');
+  document.getElementById('exam-count').textContent=list.length+' exams';
+  document.getElementById('stat-exams').textContent=list.length;
+  if(!list.length){el.innerHTML='';no.style.display='block';return}
+  no.style.display='none';
+  const catL={board:'Board',university:'University',competitive:'Competitive',entrance:'Entrance'};
+  el.innerHTML=list.map(e=>makeRow(
+    ICONS.exam, e.title,
+    [`${orgSvg} ${e.org}`,
+     e.streams&&`${eduSvg} ${e.streams}`,
+     e.examDate&&`${calSvg} Exam: ${fD(e.examDate)}`],
+    catL[e.cat]||'Exam', null,
+    e.desc, e.bullets, e.formDate, e.url
+  )).join('');
+  el.classList.add('visible');
+}
+
+async function loadExams(){
+  try{const r=await fetch('/api/exams');if(!r.ok)throw 0;const d=await r.json();if(Array.isArray(d)&&d.length)EXAMS_LIVE=d;}
+  catch{}
+  renderExams();
+}
+
+// ── SCHOLARSHIPS & SCHEMES ─────────────────────────────────
+document.querySelectorAll('.ss-tab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    activeSS=b.dataset.ss;
+    document.querySelectorAll('.ss-tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('sch-filters').style.display=activeSS==='scholarships'?'flex':'none';
+    document.getElementById('scheme-filters').style.display=activeSS==='schemes'?'flex':'none';
+    renderSS();
+  });
+});
+
+function renderSS(){
+  let list,valKey;
+  if(activeSS==='scholarships'){
+    const cat=document.getElementById('sch-cat').value;
+    list=SCHOLARSHIPS.filter(s=>{const t=(s.title+s.org).toLowerCase();return(!searchQ||t.includes(searchQ))&&(!cat||s.cat===cat);});
+    valKey='amount';
+  } else {
+    const cat=document.getElementById('scheme-cat').value;
+    list=SCHEMES.filter(s=>{const t=(s.title+s.org).toLowerCase();return(!searchQ||t.includes(searchQ))&&(!cat||s.cat===cat);});
+    valKey='benefit';
+  }
+  const el=document.getElementById('ss-list'),no=document.getElementById('no-ss');
+  document.getElementById('ss-count').textContent=list.length+(activeSS==='scholarships'?' scholarships':' schemes');
+  if(!list.length){el.innerHTML='';no.style.display='block';return}
+  no.style.display='none';
+  const icon=activeSS==='scholarships'?ICONS.scholar:ICONS.scheme;
+  const badge=activeSS==='scholarships'?'Scholarship':'Scheme';
+  el.innerHTML=list.map(s=>makeRow(
+    icon, s.title, [`${orgSvg} ${s.org}`],
+    badge, s[valKey],
+    s.desc, s.bullets, s.lastDate, s.url
+  )).join('');
+  el.classList.add('visible');
+}
+
+// ── STATIC DATA ─────────────────────────────────────────────
+const FB_JOBS=[
+  {id:1,title:"Assistant Professor (Various Departments)",org:"Assam Public Service Commission (APSC)",type:"academic",location:"Assam",salary:"₹57,700–₹1,82,400",lastDate:"2026-08-15",vacancies:"312",adUrl:"https://apsc.nic.in",source:"APSC Official",description:"APSC invites applications for Assistant Professor posts across 18 departments in government colleges of Assam.",fullDesc:["312 vacancies across Arts, Science and Commerce.","Age limit: 38 years. Relaxation for reserved categories.","Written exam + interview process.","Apply online at apsc.nic.in."]},
+  {id:2,title:"Constable (AB) & (UB) Direct Recruitment",org:"SLPRB Assam (Assam Police)",type:"govt",location:"Assam",salary:"₹14,000–₹70,000",lastDate:"2026-06-16",vacancies:"1715",adUrl:"https://apcap.in",source:"SLPRB Assam Official",description:"SLPRB Assam recruitment for Constable Armed Branch and Unarmed Branch.",fullDesc:["1715 total vacancies.","No application fee for any category.","Age: 18–25 years.","Apply at apcap.in."]},
+  {id:3,title:"Lecturer & Senior Instructor — Govt. Polytechnics",org:"AESRB Assam",type:"academic",location:"Assam",salary:"₹30,000–₹1,10,000",lastDate:"2026-09-01",vacancies:"343",adUrl:"https://www.aesrb.in",source:"AESRB Official",description:"AESRB recruitment for Lecturer and Senior Instructor in Govt Polytechnic Institutes.",fullDesc:["343 vacancies.","Apply at aesrb.in.","Fee: ₹250 Gen / ₹150 OBC / Free SC/ST."]},
+];
+
+const FB_NOTIFS=[
+  {icon:'notif',title:'PhD Spring 2026 Admissions Open',uni:'tezpur',cat:'admission',date:'2026-01-15',deadline:'2026-02-28',url:'http://www.tezu.ac.in',description:'Tezpur University PhD admissions for Spring 2026.',details:['Apply at tezu.ernet.in/adm26/','Entrance test + interview.']},
+  {icon:'notif',title:'PG Admission 2025 — GUCAT Counselling Round 2',uni:'gauhati',cat:'admission',date:'2025-06-15',deadline:'2026-07-25',url:'https://gauhati.ac.in',description:'Gauhati University GUCAT Round 2 counselling schedule.',details:['Bring all original documents.']},
+  {icon:'notif',title:'FYUGP 1st Semester Exam Routine',uni:'mangaldai',cat:'exam',date:'2025-11-01',deadline:'2026-12-15',url:'https://mangaldaicollege.org',description:'Mangaldai College FYUGP 1st Semester exam routine (NEP 2020).',details:['Practical exams before written.']},
+];
+
+const NATIONAL_NOTIFS=[
+  {icon:'notif',title:'PhD Admissions 2026 — All Departments',uni:'iitg',cat:'admission',date:'2026-01-10',deadline:'2026-03-15',url:'https://www.iitg.ac.in',description:'IIT Guwahati PhD admissions 2026 across all departments.',details:['GATE/NET scores preferred.','Written test + interview for shortlisted candidates.']},
+  {icon:'notif',title:'B.Tech Admissions 2026 — JoSAA Counselling',uni:'nit',cat:'admission',date:'2026-01-01',deadline:'2026-06-30',url:'https://www.nits.ac.in',description:'NIT Silchar B.Tech admissions through JEE Main and JoSAA.',details:['JEE Main score required.','Branches: CS, ECE, EE, ME, CE, Chemistry.']},
+  {icon:'notif',title:'MBA Admissions 2026 — CAT Based',uni:'iimk',cat:'admission',date:'2026-01-01',deadline:'2026-04-15',url:'https://www.iimkashipur.ac.in',description:'IIM Kashipur MBA 2026 admissions through CAT score.',details:['CAT 2025 score required.','WAT + PI for shortlisted candidates.']},
+  {icon:'notif',title:'MBBS Admissions 2026 — NEET Based',uni:'aiims',cat:'admission',date:'2026-01-01',deadline:'2026-06-30',url:'https://www.aiimsguwahati.edu.in',description:'AIIMS Guwahati MBBS 2026 through NEET-UG via AACCC counselling.',details:['NEET-UG score mandatory.','Apply through AACCC portal.']},
+  {icon:'notif',title:'B.Tech & Diploma Admissions 2026',uni:'nerist',cat:'admission',date:'2026-02-01',deadline:'2026-06-15',url:'https://nerist.ac.in',description:'NERIST B.Tech and Diploma admissions 2026 through NERIST NEE.',details:['Special seats for NE state students.','Programmes in Forestry, Agriculture, Engineering.']},
+  {icon:'notif',title:'M.Tech Admissions 2026 — GATE Based',uni:'iitg',cat:'admission',date:'2026-01-10',deadline:'2026-04-30',url:'https://www.iitg.ac.in',description:'IIT Guwahati M.Tech admissions 2026 through GATE score.',details:['Valid GATE score required.','Branches: CS, ECE, ME, CE, Chemical.']},
+];
+
+const EXAMS_HARDCODED=[
+  {id:'hse1',title:'AHSEC HS (Class 12) Annual Examination 2026',cat:'board',org:'Assam Higher Secondary Education Council (AHSEC)',streams:'Arts / Science / Commerce',examDate:'2026-03-03',formDate:'2025-10-01',url:'https://ahsec.assam.gov.in',desc:'AHSEC Higher Secondary Annual Examination for Arts, Science and Commerce streams.',bullets:['Exam: March 2026 — check ahsec.assam.gov.in for final routine.','Admit cards issued via respective colleges.','Results at ahsec.assam.gov.in and resassam.nic.in.']},
+  {id:'hse2',title:'SEBA HSLC (Class 10) Annual Examination 2026',cat:'board',org:'Board of Secondary Education, Assam (SEBA)',streams:'All subjects',examDate:'2026-02-13',formDate:'2025-09-01',url:'https://sebaonline.org',desc:'SEBA HSLC Annual Examination 2026 for Class 10 students across Assam.',bullets:['Exam begins mid-February 2026.','Practical exams before written — check school schedule.','Results at sebaonline.org and resassam.nic.in.']},
+  {id:'hse3',title:'TDC / FYUGP Semester Examinations 2025–26',cat:'university',org:'Gauhati University',streams:'BA / BSc / BCom / BCA — All Semesters',examDate:'2025-12-01',formDate:'2025-10-01',url:'https://gauhati.ac.in',desc:'Gauhati University semester exams for TDC (CBCS) and FYUGP (NEP 2020) programmes.',bullets:['Form fill-up at college examination cell.','Results at gauhati.ac.in within 45–60 days.']},
+  {id:'hse4',title:'APSC Combined Competitive Examination (CCE) 2025',cat:'competitive',org:'Assam Public Service Commission (APSC)',streams:'Grade-I & Grade-II posts',examDate:'2025-11-01',formDate:'2025-09-01',url:'https://apsc.nic.in',desc:'APSC CCE for Grade-I and Grade-II posts in Assam Government departments.',bullets:['Prelims → Mains → Personality Test.','Graduation required.','Age: 21–38 years.']},
+  {id:'hse5',title:'NTA CUET UG 2026',cat:'entrance',org:'National Testing Agency (NTA)',streams:'All UG programmes at Central Universities',examDate:'2026-05-01',formDate:'2026-01-01',url:'https://exams.nta.ac.in/CUET-UG/',desc:'CUET for admission to UG programmes including Tezpur University and Assam University.',bullets:['Registration at cuetug.ntaonline.in.','Tezpur University and Assam University (Silchar) accept CUET scores.']},
+  {id:'hse6',title:'JEE Main 2026 (Session 1)',cat:'entrance',org:'National Testing Agency (NTA)',streams:'B.Tech / B.Arch admissions — NIT Silchar, NERIST',examDate:'2026-01-22',formDate:'2025-11-01',url:'https://jeemain.nta.ac.in',desc:'JEE Main 2026 for NIT Silchar, NERIST and other GFTIs. Also for JEE Advanced eligibility.',bullets:['Session 1: January 2026 | Session 2: April 2026.','NIT Silchar and NERIST via JoSAA counselling.','Registration at jeemain.nta.ac.in.']},
+  {id:'hse7',title:'JEE Advanced 2026 — IIT Guwahati',cat:'entrance',org:'IIT Guwahati',streams:'B.Tech at IITs',examDate:'2026-05-18',formDate:'2026-04-20',url:'https://jeeadv.ac.in',desc:'JEE Advanced 2026 for IIT Guwahati. Top 2.5 lakh JEE Main qualifiers eligible.',bullets:['IIT Guwahati: CS, ECE, ME, CE, Chemical, Physics, Maths.','Two papers on the same day.','Counselling through JoSAA portal.']},
+  {id:'hse8',title:'NEET UG 2026',cat:'entrance',org:'National Testing Agency (NTA)',streams:'MBBS / BDS / BAMS — AIIMS Guwahati, GMC',examDate:'2026-05-03',formDate:'2026-02-01',url:'https://neet.nta.ac.in',desc:'NEET UG for MBBS admissions at AIIMS Guwahati, Gauhati Medical College and all Assam medical colleges.',bullets:['AIIMS Guwahati and GMC Guwahati admit through NEET.','Assam state quota seats available.','Registration at neet.nta.ac.in.']},
+  {id:'hse9',title:'CAT 2025 (IIM Admissions)',cat:'entrance',org:'IIMs',streams:'MBA / PGP — IIM Kashipur',examDate:'2025-11-24',formDate:'2025-08-01',url:'https://iimcat.ac.in',desc:'Common Admission Test for MBA admissions at IIM Kashipur and all IIMs.',bullets:['IIM Kashipur (North East) accepts CAT scores.','Graduation with 50% marks required.','Score valid for one year.']},
+  {id:'hse10',title:'GATE 2026',cat:'entrance',org:'IIT Roorkee',streams:'M.Tech — IIT Guwahati, NIT Silchar, Tezpur Univ',examDate:'2026-02-01',formDate:'2025-09-01',url:'https://gate2026.iitr.ac.in',desc:'GATE 2026 for M.Tech admissions at IIT Guwahati, NIT Silchar and Tezpur University. Also for PSU recruitment.',bullets:['IIT Guwahati and NIT Silchar M.Tech via GATE.','BSNL, OIL and other PSUs recruit through GATE.','Valid for 3 years from result.']},
+];
+
+const SCHOLARSHIPS=[
+  {icon:'🏅',title:'NEC Merit Scholarship & Book Grant',cat:'technical',org:'North East Council / DTE Assam',amount:'₹8,000–₹15,000/yr',lastDate:'2025-11-15',url:'https://highereducation.assam.gov.in',desc:'For students in Engineering and Professional Courses from NEC-approved NE institutions.',bullets:['Covers B.E., B.Tech, MBBS, MBA.','Advertisement every October.','Apply via DTE Assam.']},
+  {icon:'🏅',title:'State Engineering & Tech Merit Scholarship',cat:'technical',org:'Directorate of Technical Education, Assam',amount:'₹5,000–₹10,000/yr',lastDate:'2025-11-15',url:'https://highereducation.assam.gov.in',desc:'For meritorious students in Diploma, Degree, PG Engineering at Assam institutions.',bullets:['Application opens mid-October.','Govt and govt-aided engineering colleges.','Payment by March.']},
+  {icon:'🎖️',title:'National Talent Search Scholarship (NTSS)',cat:'merit',org:'NCERT / DSE Assam',amount:'₹1,250–₹2,000/month',lastDate:'2026-01-31',url:'https://madhyamik.assam.gov.in',desc:'National scholarship for talented students through State and National level exams.',bullets:['1,000 scholarships nationally.','₹1,250/month Class XI–XII; ₹2,000/month UG/PG.','15% SC, 7.5% ST, 3% PwD reserved.']},
+  {icon:'🏅',title:'Post-Matric Scholarship — SC/ST',cat:'sc_st',org:'Welfare of Plain Tribes & Backward Classes, Assam',amount:'₹300–₹3,500/month',lastDate:'2025-10-31',url:'https://scholarships.gov.in',desc:'Post-Matric scholarships for SC/ST students in Class XI and above.',bullets:['Apply at scholarships.gov.in.','Caste Certificate + Income Certificate required.','Renewable annually.']},
+  {icon:'🏅',title:'Pre-Matric Scholarship — SC/ST/OBC',cat:'sc_st',org:'Tribal Affairs (Plain), Assam',amount:'₹300–₹500/month',lastDate:'2025-10-31',url:'https://scholarships.gov.in',desc:'For BPL and SC/ST/OBC students in Class IX–XII in Assam.',bullets:['Apply via NSP portal.','Income certificate from Circle Officer required.']},
+  {icon:'🌟',title:'Minority Welfare Scholarship',cat:'minority',org:'Minority Welfare Dept., Assam',amount:'₹500–₹5,000/yr',lastDate:'2025-11-30',url:'https://sewasetu.assam.gov.in',desc:'For students from minority communities in Assam (Muslim, Christian, Sikh, Buddhist, Jain, Parsi).',bullets:['Class I to PhD level.','Apply via Sewa Setu or NSP.','Aadhaar-linked account mandatory.']},
+  {icon:'🏅',title:'INSPIRE Scholarship (DST)',cat:'merit',org:'Dept. of Science & Technology, India',amount:'₹80,000/yr',lastDate:'2026-01-15',url:'https://online-inspire.gov.in',desc:'For top 1% of Class XII scorers pursuing BSc/MS in Natural Sciences.',bullets:['Top 1% of board exam eligible.','Natural & Basic Sciences only.','₹80,000/yr + summer research.']},
+  {icon:'💼',title:'Central Sector Scholarship (CSSS)',cat:'central',org:'Ministry of Education, India',amount:'₹10,000–₹20,000/yr',lastDate:'2025-11-30',url:'https://scholarships.gov.in',desc:'For meritorious students from families with income below ₹8 lakh/yr.',bullets:['82,000 students nationally.','80th percentile+ in Class XII.','Apply via NSP.']},
+  {icon:'🛢️',title:'Oil India Merit Scholarship',cat:'merit',org:'Oil India Limited',amount:'₹15,000–₹30,000/yr',lastDate:'2025-09-30',url:'https://oil-india.com',desc:'For Class X and XII toppers from schools in OIL operational areas.',bullets:['Dibrugarh, Tinsukia, Sivasagar OIL fields.','Apply at oil-india.com.']},
+  {icon:'🏅',title:'ONGC Scholarship',cat:'central',org:'ONGC',amount:'₹48,000/yr',lastDate:'2025-10-31',url:'https://ongcscholar.org',desc:'For SC/ST and GEN/OBC students (income < ₹2 lakh) in B.E./B.Tech or MBBS 1st year.',bullets:['500 SC/ST + 500 GEN/OBC per year.','Apply at ongcscholar.org.']},
+  {icon:'🏫',title:'Ishan Uday — UGC Scholarship for NE Students',cat:'central',org:'University Grants Commission (UGC)',amount:'₹5,400–₹7,800/month',lastDate:'2025-11-30',url:'https://scholarships.gov.in',desc:'UGC scholarship exclusively for students from North East India in UG programmes.',bullets:['Permanent residents of NE states.','1st year UG students only.','Family income < ₹4.5 lakh/yr.','Apply via NSP.']},
+  {icon:'🔬',title:'Ishan Vikas — IIT Guwahati Summer Research',cat:'merit',org:'IIT Guwahati',amount:'₹10,000 + accommodation',lastDate:'2026-02-28',url:'https://www.iitg.ac.in',desc:'Summer research internship exclusively for NE students at IIT Guwahati.',bullets:['4–6 week programme.','B.Tech/M.Sc students from NE.','Work with IIT professors.','Apply January–February.']},
+];
+
+const SCHEMES=[
+  {icon:'👩‍🎓',title:'Mukhyamantri Nijut Moina Aasoni',cat:'education',org:'Govt. of Assam',benefit:'₹1,000–₹2,500/month',lastDate:'',url:'https://assam.gov.in',desc:'Monthly financial assistance to girl students from Class 11 to PG to reduce dropout rates.',bullets:['Class XI–XII: ₹1,000/month | UG: ₹1,250/month | PG: ₹2,500/month.','Govt/aided institution in Assam required.','DBT to Aadhaar-linked account.','Apply via Sewa Setu.']},
+  {icon:'🌱',title:'Orunodoi Scheme',cat:'welfare',org:'Govt. of Assam',benefit:'₹1,250/month per family',lastDate:'',url:'https://assam.gov.in',desc:'Monthly support to economically weaker women-headed households.',bullets:['BPL families targeted.','Direct bank transfer to woman member.','~22 lakh families covered.','Apply via Ward Member / Gram Panchayat.']},
+  {icon:'💼',title:'Mukhyamantri Nijut Babu (Skill Programme)',cat:'livelihood',org:'Skill, Employment & Entrepreneurship Dept., Assam',benefit:'Free training + placement',lastDate:'2026-03-31',url:'https://assam.gov.in',desc:'Skill development programme for educated unemployed youth.',bullets:['1 lakh youth/year target.','IT, Retail, Healthcare, Construction, Tourism.','NSDC-recognised certificate.','Apply via sewasetu.assam.gov.in.']},
+  {icon:'📚',title:'Bidhwa Bhanita (Free Textbooks)',cat:'education',org:'Education Dept., Govt. of Assam',benefit:'Free textbooks Class I–XII',lastDate:'',url:'https://assam.gov.in',desc:'Free textbooks for govt school students Class I to XII.',bullets:['All govt and govt-aided schools covered.','No application needed.','SEBA and AHSEC syllabus books.']},
+  {icon:'🏥',title:'Atal Amrit Abhiyan (Health Insurance)',cat:'health',org:'Health & Family Welfare Dept., Assam',benefit:'₹2 lakh cover/year',lastDate:'',url:'https://assam.gov.in',desc:'Comprehensive health insurance for BPL and lower-income families.',bullets:['₹2 lakh/year for 5 members.','1,448 diseases covered.','Cashless at empanelled hospitals.']},
+  {icon:'👨‍💻',title:'Jibon Prerana Aasoni (Laptop + Grant)',cat:'education',org:'Directorate of Higher Education, Assam',benefit:'Laptop + ₹10,000',lastDate:'2026-01-31',url:'https://highereducation.assam.gov.in',desc:'Laptops and grants for meritorious UG/PG students in govt colleges.',bullets:['Family income < ₹2 lakh required.','Apply via college principal.']},
+  {icon:'🏠',title:'PM Awas Yojana — Assam (Rural Housing)',cat:'welfare',org:'Housing & Urban Affairs, Assam',benefit:'₹1.2–₹1.3 lakh/family',lastDate:'',url:'https://assam.gov.in',desc:'Financial aid to BPL families for pucca house construction.',bullets:['₹1.2 lakh plains / ₹1.3 lakh hilly.','Apply via Block Development Officer.']},
+  {icon:'🌾',title:'PM Kisan Scheme — Assam',cat:'livelihood',org:'Agriculture Dept., Govt. of Assam',benefit:'₹6,000/yr + input support',lastDate:'',url:'https://assam.gov.in',desc:'Income support and subsidised inputs for small farmers.',bullets:['₹6,000/yr direct income support.','Fertiliser, seed and pesticide subsidies.','Apply at Agriculture Dept office.']},
+];
+
+// ── BOOT ───────────────────────────────────────────────────
+loadJobs();
+loadNotifs();
+loadExams();
+renderSS();
+</script>
+</body>
+</html>
