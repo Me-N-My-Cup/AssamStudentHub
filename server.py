@@ -97,12 +97,7 @@ def index():
     return send_file(INDEX)
 
 # ── Run ──────────────────────────────────────────────────────
-if __name__ == "__main__":
-    os.makedirs(DATA_DIR, exist_ok=True)
-    print("\n" + "="*48)
-    print("  AssamStudentHub")
-    print("  http://localhost:5000")
-    print("  Ctrl+C to stop")
-    print("="*48)
+if __name__ == '__main__':
+    # Get port from environment variable, default to 5000 for local dev
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(host='0.0.0.0', port=port)
