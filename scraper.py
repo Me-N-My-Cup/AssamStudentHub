@@ -483,35 +483,64 @@ def notif(uid, uni, label, icon, title, url, desc="", details=None, deadline=Non
 def _scrape_notif_links(soup, uni, label, icon, prefix, base_url, limit=20):
     if not soup: return []
     items, seen = [], set()
+    
+    # 1. Expanded and precise junk list
+    junk_words = [
+        "screen reader", "skip to", "main content", "hindi version", 
+        "हिंदी", "gallery", "photo", "sitemap", "contact", "about us",
+        "accessibility", "rti", "terms", "privacy", "copyright", "home"
+    ]
+
     for a in soup.select("a"):
-        title = clean(a.get_text())
-        href  = a.get("href","")
-        if len(title) < 10 or title in seen: continue
-        if not any(k in title.lower() for k in
-                   list(NOTIF_KW["admission"]) + list(NOTIF_KW["exam"]) +
-                   list(NOTIF_KW["recruitment"]) + ["notice","circular","result","schedule","routine"]):
+        # Get text, lowercase it, and strip all weird whitespace
+        raw_text = a.get_text()
+        clean_title = clean(raw_text)
+        search_text = clean_title.lower()
+        
+        href = a.get("href", "")
+        
+        # 2. Skip if it's too short or already processed
+        if len(clean_title) < 10 or clean_title in seen: 
             continue
-        if any(s in title.lower() for s in ["home","sign in","sitemap","google","report abuse","about","contact","menu"]):
+        
+        # 3. STRICT JUNK FILTER
+        # We check if any junk word is IN the title OR if the title is EXACTLY a junk word
+        is_junk = False
+        for junk in junk_words:
+            if junk in search_text:
+                is_junk = True
+                break
+        if is_junk:
             continue
-        seen.add(title)
-        if href and not href.startswith("http"): href = base_url + href
-        items.append(notif(f"{prefix}-{len(items)+1}", uni, label, icon, title, href or base_url))
-        if len(items) >= limit: break
+            
+        # 4. RELEVANCE FILTER
+        # Only keep it if it looks like a student notice
+        relevant_keywords = ["admission", "exam", "result", "routine", "schedule", 
+                             "recruitment", "vacancy", "notice", "circular", "apply"]
+        
+        if not any(k in search_text for k in relevant_keywords):
+            continue
+            
+        seen.add(clean_title)
+        
+        # Fix URL
+        if href and not href.startswith("http"): 
+            href = base_url.rstrip("/") + "/" + href.lstrip("/")
+            
+        items.append(notif(f"{prefix}-{len(items)+1}", uni, label, icon, clean_title, href or base_url))
+        
+        if len(items) >= limit: 
+            break
+            
     return items
 
 def scrape_tezpur_notifs():
-    """
-    Tezpur University notices live on tezu.ernet.in (not tezu.ac.in).
-    Key pages:
-      - /notice/noticeboard.html       — general notices
-      - /notice/admission_2026.html    — admission notices
-      - /notice/recruitment.html       — faculty/staff recruitment  (alias: /other/jobs.htm)
-      - /ProjectWalkin/project_jobs.htm — project/JRF/SRF jobs
-      - /notice/tender.html            — tenders
-    """
     print("\n  [8] Tezpur University — tezu.ernet.in")
     items, seen = [], set()
     base = "https://www.tezu.ernet.in"
+    
+    # 1. Expanded junk filter
+    junk_words = ["screen reader", "skip to", "main content", "hindi version", "हिंदी", "gallery", "photo"]
 
     pages = [
         (f"{base}/other/jobs.htm",                "recruitment"),
@@ -523,28 +552,35 @@ def scrape_tezpur_notifs():
     for url, hint in pages:
         soup = fetch(url, verify=False)
         if not soup: continue
-        # Tezpur uses <table> rows with <a> links — very classic govt site
         for a in soup.select("td a, li a, p a, a"):
             title = clean(a.get_text())
             href  = a.get("href","")
+            search_text = title.lower()
+
             if len(title) < 10 or title in seen: continue
-            if any(s in title.lower() for s in ["home","contact","sitemap","privacy","about","accessibility","rti","terms"]):
-                continue
-            # Accept anything from these dedicated pages
+            
+            # Apply Junk Filter
+            if any(j in search_text for j in junk_words): continue
+            
+            # Apply Relevance Filter
+            relevant_keywords = ["admission", "exam", "result", "routine", "schedule", 
+                                 "recruitment", "vacancy", "notice", "circular", "apply"]
+            if not any(k in search_text for k in relevant_keywords): continue
+
             seen.add(title)
             if href and not href.startswith("http"):
                 href = base + "/" + href.lstrip("/")
-            items.append(notif(f"tez-{len(items)+1}", "tezpur", "Tezpur University",
-                               "🔬", title, href or base))
+            items.append(notif(f"tez-{len(items)+1}", "tezpur", "Tezpur University", "🔬", title, href or base))
             if len(items) >= 30: break
-        if len(items) >= 30: break
-
     print(f"    ✓ {len(items)} notices")
     return items
 
 def scrape_gauhati_notifs():
     print("\n  [9] Gauhati University — gauhati.ac.in")
     items, seen = [], set()
+    
+    junk_words = ["screen reader", "skip to", "main content", "hindi version", "हिंदी", "gallery", "photo"]
+
     for url in ["https://gauhati.ac.in/",
                 "https://sites.google.com/a/gauhati.ac.in/notifications/notifications/general",
                 "https://sites.google.com/a/gauhati.ac.in/notifications/examination",
@@ -554,17 +590,23 @@ def scrape_gauhati_notifs():
         for a in soup.select("li a, td a, a"):
             title = clean(a.get_text())
             href  = a.get("href","")
+            search_text = title.lower()
+
             if len(title) < 15 or title in seen: continue
-            if any(s in title.lower() for s in ["home","sign in","sitemap","google","report abuse"]): continue
-            if not any(k in title.lower() for k in
-                       list(NOTIF_KW["admission"]) + list(NOTIF_KW["exam"]) +
+            
+            # Apply Junk Filter
+            if any(j in search_text for j in junk_words): continue
+            
+            # Apply Relevance Filter
+            if not any(k in search_text for k in 
+                       list(NOTIF_KW["admission"]) + list(NOTIF_KW["exam"]) + 
                        list(NOTIF_KW["recruitment"]) + ["notice","circular"]):
                 continue
+
             seen.add(title)
             if href and not href.startswith("http"): href = "https://gauhati.ac.in" + href
             items.append(notif(f"gu-{len(items)+1}", "gauhati", "Gauhati University", "🏛️", title, href or "https://gauhati.ac.in"))
             if len(items) >= 25: break
-        if len(items) >= 25: break
     print(f"    ✓ {len(items)} notices")
     return items
 
@@ -766,6 +808,24 @@ def run():
     print("  Run:  python server.py")
     print("  Open: http://localhost:5000")
     print("=" * 58 + "\n")
+
+    # ── Push to Supabase ─────────────────────────────────────
+    print("\n── SUPABASE ──────────────────────────────────────────")
+    try:
+        from db import upsert_jobs, upsert_notifications, upsert_exams, get_client
+        sb = get_client()
+        # Clear old rows so stale data doesn't linger
+        sb.table("jobs").delete().neq("id", "__none__").execute()
+        sb.table("notifications").delete().neq("id", "__none__").execute()
+        sb.table("exams").delete().neq("id", "__none__").execute()
+        j_count = upsert_jobs(all_jobs)
+        n_count = upsert_notifications(all_notifs)
+        e_count = upsert_exams(all_exams)
+        print(f"  ✓ {j_count} jobs | {n_count} notifications | {e_count} exams pushed to Supabase")
+    except Exception as err:
+        print(f"  ✗ Supabase push failed: {err}")
+        print("    Local JSON files still usable as fallback.")
+
 
 if __name__ == "__main__":
     run()

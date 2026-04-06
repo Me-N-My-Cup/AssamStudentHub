@@ -1,0 +1,9 @@
+# Credentials
+.env
+
+# Python junk
+__pycache__/
+*.pyc
+
+# Local Data
+data/*.json
